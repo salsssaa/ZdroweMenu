@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getCurrentUser, logoutUser } from "./auth/AuthService";
+import { getCurrentUser } from "./auth/AuthService";
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -71,24 +71,11 @@ const Dashboard = () => {
 
   return (
     <div className="bg-gray-900 text-white min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-emerald-400">ZdroweMenu</h1>
-          <button 
-            onClick={() => {
-              logoutUser();
-              navigate("/login");
-            }}
-            className="text-white hover:text-emerald-400"
-          >
-            Wyloguj się
-          </button>
-        </div>
-
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Główna zawartość */}
         <div className="bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
           <div className="text-center mb-6">
-            <h2 className="text-3xl font-bold text-emerald-400">Witaj, {user?.imie || "chuj"}!</h2>
+            <h2 className="text-3xl font-bold text-emerald-400">Witaj, {user?.imie || "Użytkowniku"}!</h2>
             <p className="text-gray-400 mt-2">Twój panel zarządzania dietą</p>
           </div>
 

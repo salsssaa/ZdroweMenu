@@ -95,7 +95,7 @@ const Profil = () => {
 
   return (
     <div className="bg-gray-900 text-white min-h-screen">
-      <div className="w-full px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-gray-800 rounded-xl shadow-lg p-6">
           <h2 className="text-2xl font-bold text-emerald-400 mb-4">Mój profil</h2>
           
