@@ -1,0 +1,191 @@
+Dokumentacja projektu ZdroweMenu
+Przegląd projektu
+ZdroweMenu to aplikacja do zarządzania dietą i jadłospisem, która umożliwia użytkownikom śledzenie spożywanych posiłków, sprawdzanie kompatybilności produktów z dietą oraz monitorowanie dziennego spożycia kalorii.
+
+Architektura systemu
+Backend (FastAPI)
+Backend aplikacji jest zbudowany przy użyciu frameworka FastAPI, który zapewnia szybkie przetwarzanie żądań API i automatyczną dokumentację Swagger.
+
+Technologie:
+
+FastAPI
+
+JWT (JSON Web Tokens) do autoryzacji
+
+Open Food Facts API do pobierania danych o produktach
+
+Stan: ✅ Działający
+
+Uruchomienie: uvicorn main:app --reload
+
+Dokumentacja API: Dostępna pod adresem http://localhost:8000/docs
+
+Frontend (React)
+Frontend aplikacji jest zbudowany przy użyciu biblioteki React, która umożliwia tworzenie dynamicznych interfejsów użytkownika.
+
+Technologie:
+
+React
+
+TailwindCSS (v3.4)
+
+React Router
+
+Stan: ✅ Działający
+
+Uruchomienie: npm start (aplikacja dostępna pod adresem http://localhost:3000)
+
+Funkcjonalności
+Autoryzacja
+✅ Rejestracja użytkownika
+
+✅ Logowanie użytkownika
+
+✅ Autoryzacja przez token JWT
+
+✅ Pobieranie danych zalogowanego użytkownika
+
+Zarządzanie dietą
+✅ Pobieranie listy dostępnych diet
+
+✅ Wybór preferowanej diety
+
+✅ Ustawianie dziennego celu kalorii
+
+✅ Definiowanie alergii pokarmowych
+
+Jadłospis
+✅ Pobieranie jadłospisu na wybrany dzień
+
+✅ Sprawdzanie kompatybilności jadłospisu z dietą użytkownika
+
+✅ Wyświetlanie wartości odżywczych posiłków
+
+Produkty
+✅ Wyszukiwanie produktów w bazie Open Food Facts
+
+✅ Pobieranie szczegółowych informacji o produktach
+
+✅ Sprawdzanie kompatybilności produktów z dietą użytkownika
+
+Dostępne endpointy API
+Autoryzacja
+Endpoint	Metoda	Opis
+/api/auth/register	POST	Rejestracja nowego użytkownika
+/api/auth/token	POST	Logowanie i uzyskanie tokenu JWT
+/api/auth/me	GET	Pobieranie danych zalogowanego użytkownika
+Diety
+Endpoint	Metoda	Opis
+/api/diety	GET	Pobieranie listy dostępnych diet
+/api/diety/{dieta_id}	GET	Pobieranie szczegółów konkretnej diety
+Jadłospis
+Endpoint	Metoda	Opis
+/api/jadlospis/{data}	GET	Pobieranie jadłospisu na konkretny dzień
+/api/jadlospis/tydzien/{data_poczatkowa}	GET	Pobieranie jadłospisów na tydzień
+Użytkownicy i kompatybilność
+Endpoint	Metoda	Opis
+/api/uzytkownik/{uzytkownik_id}	GET	Pobieranie informacji o użytkowniku
+/api/uzytkownik/{uzytkownik_id}/sprawdz-kompatybilnosc/{data}	GET	Sprawdzanie kompatybilności jadłospisu z dietą użytkownika
+/api/produkt/{produkt_id}/sprawdz-kompatybilnosc/{uzytkownik_id}	GET	Sprawdzanie kompatybilności produktu z dietą użytkownika
+Produkty
+Endpoint	Metoda	Opis
+/api/produkty/szukaj?zapytanie=...	GET	Wyszukiwanie produktów w bazie Open Food Facts
+/api/produkty/{kod_kreskowy}	GET	Pobieranie szczegółów produktu po kodzie kreskowym
+Struktura projektu
+Backend
+text
+/backend
+├── main.py                # Główny plik aplikacji FastAPI
+├── auth.py                # Moduł autoryzacji (JWT)
+├── models.py              # Modele danych
+└── requirements.txt       # Zależności projektu
+Frontend
+text
+/frontend
+├── public/                # Statyczne pliki
+├── src/
+│   ├── auth/              # Komponenty i usługi autoryzacji
+│   │   ├── AuthPages.js   # Formularze logowania i rejestracji
+│   │   └── AuthService.js # Serwis do komunikacji z API autoryzacji
+│   ├── components/        # Współdzielone komponenty
+│   │   └── Navbar.js      # Pasek nawigacyjny
+│   ├── pages/             # Strony aplikacji
+│   │   ├── Dashboard.js   # Panel główny
+│   │   ├── Jadlospis.js   # Strona jadłospisu
+│   │   ├── Produkty.js    # Wyszukiwarka produktów
+│   │   └── Profil.js      # Profil użytkownika
+│   ├── services/          # Usługi do komunikacji z API
+│   ├── App.js             # Główny komponent aplikacji
+│   └── index.js           # Punkt wejściowy aplikacji
+└── package.json           # Zależności i skrypty
+Przepływ pracy użytkownika
+Rejestracja/Logowanie
+
+Użytkownik rejestruje się, podając email, hasło i opcjonalne dane
+
+Użytkownik loguje się, otrzymując token JWT
+
+Dashboard
+
+Po zalogowaniu użytkownik trafia na dashboard
+
+Dashboard wyświetla podstawowe informacje o użytkowniku (imię, dieta, cel kalorii)
+
+Dashboard pokazuje dzisiejszy jadłospis (jeśli istnieje)
+
+Zarządzanie dietą
+
+Użytkownik może przeglądać dostępne diety
+
+Użytkownik może sprawdzać kompatybilność jadłospisu ze swoją dietą
+
+Wyszukiwanie produktów
+
+Użytkownik może wyszukiwać produkty w bazie Open Food Facts
+
+Użytkownik może sprawdzać kompatybilność produktów ze swoją dietą
+
+Interfejs użytkownika
+Kolorystyka
+Tło: ciemny grafit (bg-gray-900)
+
+Kontenery: ciemny szary (bg-gray-800)
+
+Akcenty: zielony (emerald-400, emerald-600)
+
+Tekst: biały i odcienie szarości (text-white, text-gray-300, text-gray-400)
+
+Komponenty UI
+Formularze z ciemnymi polami (bg-gray-700)
+
+Przyciski w kolorze zielonym (bg-emerald-600)
+
+Karty z cieniami i zaokrąglonymi rogami
+
+Responsywny layout z wykorzystaniem Tailwind CSS
+
+Planowane funkcjonalności
+Aktualizacja danych użytkownika
+
+Endpoint do aktualizacji profilu użytkownika
+
+Formularz edycji danych w interfejsie
+
+Tworzenie własnych jadłospisów
+
+Możliwość dodawania własnych posiłków
+
+Zapisywanie własnych jadłospisów
+
+Statystyki i raporty
+
+Wykresy spożycia kalorii
+
+Analiza zgodności z dietą
+
+Znane problemy
+Dane przechowywane są tymczasowo w pamięci (USERS_DB)
+
+Brak możliwości aktualizacji danych użytkownika przez API
+
+Ograniczona liczba dostępnych jadłospisów
