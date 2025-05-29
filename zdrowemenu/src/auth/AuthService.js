@@ -41,7 +41,7 @@ export const registerUser = async (userData) => {
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(userData),
+    body: JSON.stringify(formattedData),
   });
   
   if (!response.ok) {
@@ -60,18 +60,31 @@ export const getCurrentUser = async () => {
     throw new Error('Brak tokenu autoryzacji');
   }
   
-  const response = await fetch(`${API_BASE}/api/auth/me`, {
-    headers: {
-      'Authorization': `Bearer ${token}`
+  try {
+    const response = await fetch(`${API_BASE}/api/auth/me`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      // Jeśli token jest nieprawidłowy, usuń go z localStorage
+      if (response.status === 401) {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userId');
+      }
+      throw new Error('Błąd autoryzacji');
     }
-  });
-  
-  if (!response.ok) {
-    throw new Error('Błąd autoryzacji');
+    
+    return response.json();
+  } catch (error) {
+    // W przypadku błędu sieciowego lub innego, usuń token
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userId');
+    throw error;
   }
-  
-  return response.json();
 };
+
 
 export const logoutUser = () => {
   localStorage.removeItem('authToken');
@@ -79,5 +92,32 @@ export const logoutUser = () => {
 };
 
 export const isAuthenticated = () => {
-  return !!localStorage.getItem('authToken');
+  const token = localStorage.getItem('authToken');
+  return !!token;
 };
+
+export const updateUserProfile = async (userData) => {
+  const token = localStorage.getItem('authToken');
+  
+  if (!token) {
+    throw new Error('Brak tokenu autoryzacji');
+  }
+  
+  const response = await fetch(`${API_BASE}/api/auth/update-profile`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(userData),
+  });
+  
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || 'Błąd podczas aktualizacji profilu');
+  }
+  
+  return response.json();
+};
+
+

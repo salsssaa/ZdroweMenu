@@ -8,6 +8,8 @@ import os
 from dotenv import load_dotenv
 import auth
 from auth import UzytkownikIn, UzytkownikOut, UzytkownikAuth, Token
+from pydantic import BaseModel
+from typing import Optional
 
 # Ładowanie zmiennych środowiskowych
 load_dotenv()
@@ -597,6 +599,11 @@ async def read_users_me(current_user: UzytkownikAuth = Depends(auth.get_current_
             user_id = user_data["id"]
             break
     
+    # Znajdź dietę użytkownika
+    dieta = None
+    if current_user.dieta_id:
+        dieta = next((d for d in DIETY if d["id"] == current_user.dieta_id), None)
+    
     return {
         "id": user_id,
         "email": current_user.email,
@@ -604,8 +611,67 @@ async def read_users_me(current_user: UzytkownikAuth = Depends(auth.get_current_
         "nazwisko": current_user.nazwisko,
         "alergie": current_user.alergie,
         "dieta_id": current_user.dieta_id,
+        "dieta": dieta,  # DODANO: pełny obiekt diety
         "cel_kalorii": current_user.cel_kalorii
     }
+
+
+from pydantic import BaseModel
+from typing import Optional
+class UzytkownikUpdate(BaseModel):
+    imie: Optional[str] = None
+    nazwisko: Optional[str] = None
+    alergie: Optional[list] = None  # WAŻNE: lista, nie string
+    dieta_id: Optional[int] = None
+    cel_kalorii: Optional[int] = None
+
+@app.put("/api/auth/update-profile", response_model=UzytkownikOut)
+async def update_user_profile(
+    user_data: UzytkownikUpdate,
+    current_user: UzytkownikAuth = Depends(auth.get_current_active_user)
+):
+    """Aktualizacja danych użytkownika"""
+    if current_user.email not in auth.USERS_DB:
+        raise HTTPException(status_code=404, detail="Użytkownik nie znaleziony")
+    
+    # Aktualizuj tylko przekazane pola
+    if user_data.imie is not None:
+        auth.USERS_DB[current_user.email]["imie"] = user_data.imie
+    if user_data.nazwisko is not None:
+        auth.USERS_DB[current_user.email]["nazwisko"] = user_data.nazwisko
+    if user_data.alergie is not None:
+        auth.USERS_DB[current_user.email]["alergie"] = user_data.alergie
+    if user_data.dieta_id is not None:
+        # Sprawdź czy dieta istnieje
+        dieta_exists = any(d["id"] == user_data.dieta_id for d in DIETY)
+        if not dieta_exists and user_data.dieta_id != 0:
+            raise HTTPException(status_code=404, detail="Wybrana dieta nie istnieje")
+        auth.USERS_DB[current_user.email]["dieta_id"] = user_data.dieta_id
+    if user_data.cel_kalorii is not None:
+        auth.USERS_DB[current_user.email]["cel_kalorii"] = user_data.cel_kalorii
+    
+    # Pobierz zaktualizowane dane użytkownika
+    user_db_data = auth.USERS_DB[current_user.email]
+    
+    # DODAJ: Znajdź pełne informacje o diecie użytkownika
+    dieta = None
+    if user_db_data.get("dieta_id"):
+        dieta = next((d for d in DIETY if d["id"] == user_db_data["dieta_id"]), None)
+    
+    # Zwróć zaktualizowane dane Z PEŁNYMI INFORMACJAMI O DIECIE
+    return {
+        "id": user_db_data["id"],
+        "email": current_user.email,
+        "imie": user_db_data["imie"],
+        "nazwisko": user_db_data["nazwisko"],
+        "alergie": user_db_data["alergie"],
+        "dieta_id": user_db_data["dieta_id"],
+        "dieta": dieta,  # DODAJ PEŁNY OBIEKT DIETY
+        "cel_kalorii": user_db_data["cel_kalorii"]
+    }
+
+
+
 
 if __name__ == "__main__":
     import uvicorn

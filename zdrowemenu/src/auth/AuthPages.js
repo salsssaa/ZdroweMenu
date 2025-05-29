@@ -188,10 +188,11 @@ const RegisterForm = () => {
         </div>
 
         {error && (
-          <div className="bg-red-900 text-red-100 p-3 rounded-lg mb-6 text-sm">
-            {error}
-          </div>
-        )}
+  <div className="bg-red-50 text-red-700 p-3 rounded-lg mb-6 text-sm">
+    {typeof error === 'string' ? error : (error.message || 'Wystąpił błąd')}
+  </div>
+)}
+
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="mb-4">

@@ -95,7 +95,15 @@ const ApiService = {
   
   checkProductCompatibility: async (productId, userId) => {
     return fetchWithAuth(`/api/produkt/${productId}/sprawdz-kompatybilnosc/${userId}`);
-  }
+  },
+
+  updateUserProfile: async (userData) => {
+  return fetchWithAuth('/api/auth/update-profile', {
+    method: 'PUT',
+    body: JSON.stringify(userData),
+  });
+}
+
 };
 
 export default ApiService;

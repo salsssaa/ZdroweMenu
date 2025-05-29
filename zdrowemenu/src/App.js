@@ -5,16 +5,20 @@ import { isAuthenticated } from './auth/AuthService';
 import './index.css';
 import Dashboard from './Dashboard';
 import Navbar from './components/Navbar';
+import { UserProvider } from './UserContext'; // zamiast './context/UserContext'
+
+
 
 // Importy dla nowych stron
 import Produkty from './pages/Produkty';
 import Jadlospis from './pages/Jadlospis';
 import Profil from './pages/Profil';
 
-// Wrapper dla chronionych tras z Navbarem
+
+// Wrapper dla chronionych tras
 const PrivateLayout = ({ children }) => {
   if (!isAuthenticated()) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" replace />;
   }
   
   return (
@@ -27,9 +31,11 @@ const PrivateLayout = ({ children }) => {
   );
 };
 
+
 // Główny komponent aplikacji
 function App() {
   return (
+   <UserProvider>
     <Router>
       <div className="flex flex-col min-h-screen w-full">
         <Routes>
@@ -70,6 +76,7 @@ function App() {
         </Routes>
       </div>
     </Router>
+    </UserProvider>
   );
 }
 

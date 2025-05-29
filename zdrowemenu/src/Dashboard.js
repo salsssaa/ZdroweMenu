@@ -1,26 +1,33 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getCurrentUser } from "./auth/AuthService";
+import { useUser } from './UserContext'; // zamiast './context/UserContext'
+
 
 const Dashboard = () => {
-  const [user, setUser] = useState(null);
+  const { user, fetchUser, isLoading } = useUser();
   const [jadlospis, setJadlospis] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [jadlospisLoading, setJadlospisLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchUserData = async () => {
+    // Pobierz dane użytkownika z kontekstu jeśli nie ma
+    if (!user) {
+      fetchUser();
+    }
+  }, [user, fetchUser]);
+
+  useEffect(() => {
+    // Pobierz jadłospis gdy user jest dostępny
+    const fetchJadlospis = async () => {
+      if (!user) return;
+      
       try {
-        setIsLoading(true);
-        const userData = await getCurrentUser();
-        setUser(userData);
-        
-        // Pobieranie dzisiejszego jadłospisu
+        setJadlospisLoading(true);
         const today = new Date().toISOString().split('T')[0];
         const jadlospisData = await fetch(`http://localhost:8000/api/jadlospis/${today}`, {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
           }
         });
         
@@ -28,17 +35,15 @@ const Dashboard = () => {
           const jadlospisJson = await jadlospisData.json();
           setJadlospis(jadlospisJson);
         }
-      } catch (err) {
-        console.error("Błąd podczas pobierania danych:", err);
-        setError("Nie udało się pobrać danych. Proszę zalogować się ponownie.");
-        navigate("/login");
+      } catch (menuError) {
+        console.log("Brak jadłospisu na dziś:", menuError);
       } finally {
-        setIsLoading(false);
+        setJadlospisLoading(false);
       }
     };
 
-    fetchUserData();
-  }, [navigate]);
+    fetchJadlospis();
+  }, [user]);
 
   // Funkcje nawigacyjne
   const handleSearchProducts = () => navigate("/produkty");
@@ -65,6 +70,14 @@ const Dashboard = () => {
             Przejdź do logowania
           </button>
         </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="w-full h-screen flex justify-center items-center bg-gray-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500"></div>
       </div>
     );
   }
@@ -110,38 +123,13 @@ const Dashboard = () => {
             {/* Alergie */}
             <div className="bg-gray-900 bg-opacity-50 p-5 rounded-lg border border-gray-700">
               <h3 className="text-lg font-semibold text-amber-400 mb-3">Alergie</h3>
-              {user?.alergie ? (
+              {user?.alergie && Array.isArray(user.alergie) && user.alergie.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
-                  {(() => {
-                    // Funkcja do bezpiecznego przetwarzania alergii
-                    const parseAlergie = (alergie) => {
-                      if (!alergie) return [];
-                      if (typeof alergie === 'string') {
-                        return alergie.split(',').map(a => a.trim()).filter(a => a);
-                      }
-                      if (Array.isArray(alergie)) {
-                        return alergie.map(a => String(a).trim()).filter(a => a);
-                      }
-                      try {
-                        const alergieStr = String(alergie);
-                        return alergieStr.split(',').map(a => a.trim()).filter(a => a);
-                      } catch (e) {
-                        return [];
-                      }
-                    };
-                    
-                    const alergieList = parseAlergie(user.alergie);
-                    
-                    return alergieList.length > 0 ? (
-                      alergieList.map((alergia, index) => (
-                        <span key={index} className="px-2 py-1 bg-amber-900 text-amber-200 rounded-full text-sm">
-                          {alergia}
-                        </span>
-                      ))
-                    ) : (
-                      <p className="text-gray-400">Brak zdefiniowanych alergii</p>
-                    );
-                  })()}
+                  {user.alergie.map((alergia, index) => (
+                    <span key={index} className="px-2 py-1 bg-amber-900 text-amber-200 rounded-full text-sm">
+                      {alergia}
+                    </span>
+                  ))}
                 </div>
               ) : (
                 <p className="text-gray-400">Brak zdefiniowanych alergii</p>
@@ -154,7 +142,11 @@ const Dashboard = () => {
         <div className="bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
           <h3 className="text-xl font-semibold text-emerald-400 mb-4">Twój dzisiejszy jadłospis</h3>
           
-          {jadlospis ? (
+          {jadlospisLoading ? (
+            <div className="flex justify-center my-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-500"></div>
+            </div>
+          ) : jadlospis ? (
             <div className="space-y-4">
               {/* Śniadanie */}
               <div className="border-l-4 border-emerald-500 pl-4">

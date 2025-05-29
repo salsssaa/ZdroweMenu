@@ -6,6 +6,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel
 
+
 # Klasy dla modeli danych
 class UzytkownikAuth(BaseModel):
     email: str
@@ -34,7 +35,9 @@ class UzytkownikOut(BaseModel):
     nazwisko: Optional[str] = None
     alergie: list = []
     dieta_id: Optional[int] = None
+    dieta: Optional[Dict[str, Any]] = None  # DODANO: pole dla pełnego obiektu diety
     cel_kalorii: Optional[int] = None
+
 
 class TokenData(BaseModel):
     email: Optional[str] = None

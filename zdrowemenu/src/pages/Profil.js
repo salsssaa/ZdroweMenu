@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import ApiService from '../services/ApiService';
+import { useUser } from '../UserContext'; // zamiast '../context/UserContext'
+
 
 const Profil = () => {
-  const [user, setUser] = useState(null);
+  const { user, updateUser, fetchUser, isLoading, error: contextError } = useUser();
   const [diets, setDiets] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     imie: '',
@@ -16,36 +17,43 @@ const Profil = () => {
   });
 
   useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
+    // Pobierz dane użytkownika z kontekstu
+    if (!user) {
+      fetchUser();
+    }
+    
+    // Pobierz diety
+    const fetchDiets = async () => {
       try {
-        // Pobierz dane użytkownika
-        const userData = await ApiService.getCurrentUser();
-        setUser(userData);
-        
-        // Ustaw dane formularza
-        setFormData({
-          imie: userData.imie || '',
-          nazwisko: userData.nazwisko || '',
-          dieta_id: userData.dieta_id || '',
-          alergie: userData.alergie || '',
-          cel_kalorii: userData.cel_kalorii || ''
-        });
-        
-        // Pobierz dostępne diety
-        const dietsData = await ApiService.getDiets();
-        setDiets(dietsData);
+        const dietsData = await fetch('http://localhost:8000/api/diety');
+        const dietsJson = await dietsData.json();
+        setDiets(dietsJson);
       } catch (err) {
-        console.error("Błąd podczas pobierania danych:", err);
-        setError("Nie udało się pobrać danych użytkownika");
-      } finally {
-        setIsLoading(false);
+        console.error("Błąd podczas pobierania diet:", err);
       }
     };
     
-    fetchData();
-  }, []);
+    fetchDiets();
+  }, [user, fetchUser]);
 
+  // Aktualizuj formularz gdy user się zmieni
+  useEffect(() => {
+    if (user) {
+      const alergieString = Array.isArray(user.alergie) 
+        ? user.alergie.join(', ') 
+        : (user.alergie || '');
+      
+      setFormData({
+        imie: user.imie || '',
+        nazwisko: user.nazwisko || '',
+        dieta_id: user.dieta_id || '',
+        alergie: alergieString,
+        cel_kalorii: user.cel_kalorii || ''
+      });
+    }
+  }, [user]);
+
+  // DODAJ TĘ FUNKCJĘ - była brakująca
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -56,26 +64,28 @@ const Profil = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
+    setError(null);
+    setSuccessMessage(null);
     
     try {
-      // Tu powinna być implementacja aktualizacji danych użytkownika
-      // Obecnie backend nie ma endpointu do aktualizacji, więc to jest tylko przykład
-      // await ApiService.updateUser(formData);
+      const alergieArray = formData.alergie 
+        ? formData.alergie.split(',').map(a => a.trim()).filter(a => a)
+        : [];
       
-      // Symulacja aktualizacji
-      setUser({
-        ...user,
-        ...formData,
-        dieta_id: parseInt(formData.dieta_id) || null,
-        cel_kalorii: parseInt(formData.cel_kalorii) || null
-      });
+      const updatedData = {
+        imie: formData.imie || null,
+        nazwisko: formData.nazwisko || null,
+        dieta_id: formData.dieta_id ? parseInt(formData.dieta_id) : null,
+        cel_kalorii: formData.cel_kalorii ? parseInt(formData.cel_kalorii) : null,
+        alergie: alergieArray
+      };
       
+      await updateUser(updatedData);
+      setSuccessMessage("Dane zostały zaktualizowane pomyślnie!");
       setIsEditing(false);
+      
     } catch (err) {
-      setError("Nie udało się zaktualizować danych");
-    } finally {
-      setIsLoading(false);
+      setError("Nie udało się zaktualizować danych: " + err.message);
     }
   };
 
@@ -85,7 +95,7 @@ const Profil = () => {
     return diet ? diet.nazwa : "Nie wybrano";
   };
 
-  if (isLoading && !user) {
+  if (isLoading) {
     return (
       <div className="bg-gray-900 text-white min-h-screen flex justify-center items-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500"></div>
@@ -105,6 +115,12 @@ const Profil = () => {
             </div>
           )}
           
+          {successMessage && (
+            <div className="bg-green-900 text-green-100 p-3 rounded-lg mb-6 text-sm">
+              {successMessage}
+            </div>
+          )}
+          
           {!isEditing ? (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -120,14 +136,8 @@ const Profil = () => {
                   <p className="text-gray-300 mb-2"><span className="font-medium">Cel kalorii:</span> {user?.cel_kalorii || 'Nie ustawiono'}</p>
                   <p className="text-gray-300 mb-2">
                     <span className="font-medium">Alergie:</span> 
-                    {user?.alergie ? (
-                      <span className="ml-2">
-                        {typeof user.alergie === 'string' 
-                          ? user.alergie 
-                          : Array.isArray(user.alergie) 
-                            ? user.alergie.join(', ') 
-                            : 'Brak'}
-                      </span>
+                    {user?.alergie && Array.isArray(user.alergie) && user.alergie.length > 0 ? (
+                      <span className="ml-2">{user.alergie.join(', ')}</span>
                     ) : (
                       ' Brak'
                     )}
@@ -228,14 +238,17 @@ const Profil = () => {
               <div className="md:col-span-2 flex space-x-4">
                 <button
                   type="submit"
-                  disabled={isLoading}
                   className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 px-4 rounded-lg transition duration-300 flex-1"
                 >
-                  {isLoading ? 'Zapisywanie...' : 'Zapisz zmiany'}
+                  Zapisz zmiany
                 </button>
                 <button
                   type="button"
-                  onClick={() => setIsEditing(false)}
+                  onClick={() => {
+                    setIsEditing(false);
+                    setError(null);
+                    setSuccessMessage(null);
+                  }}
                   className="bg-gray-700 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition duration-300"
                 >
                   Anuluj
