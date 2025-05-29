@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import os
 from dotenv import load_dotenv
 import auth
+import uvicorn
 from auth import UzytkownikIn, UzytkownikOut, UzytkownikAuth, Token
 from pydantic import BaseModel
 from typing import Optional
@@ -15,8 +16,8 @@ from typing import Optional
 load_dotenv()
 
 app = FastAPI(
-    title="ZdroweMenu API",
-    description="API dla dietetycznego doradcy sanatoryjnego"
+    title="ZdroweMenu",
+    description="Aplikacja dla dietetycznego doradcy sanatoryjnego"
 )
 
 # Konfiguracja CORS dla aplikacji React
@@ -101,7 +102,7 @@ UZYTKOWNICY = {
 @app.get("/")
 def odczytaj_glowna():
     """Endpoint główny API"""
-    return {"wiadomosc": "Witaj w API ZdroweMenu - Dietetyczny doradca sanatoryjny"}
+    return {"wiadomosc": "Witaj w ZdroweMenu - Dietetyczny doradca sanatoryjny"}
 
 @app.get("/api/produkty/szukaj")
 async def szukaj_produkty(
@@ -674,5 +675,4 @@ async def update_user_profile(
 
 
 if __name__ == "__main__":
-    import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True) 
